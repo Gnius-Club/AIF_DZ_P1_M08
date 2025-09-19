@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Embajadores del Juego Limpio: El Duelo de Estrategias</title>
+  <style>
+    /* =====================
+       ESTILOS GENERALES
+       ===================== */
+    :root{
+      --bg:#0b0f14;           /* Fondo oscuro para alto contraste */
+      --panel:#111926;        /* Paneles */
+      --card:#162233;
+      --primary:#00d9ff;      /* Cian brillante accesible sobre fondo oscuro */
+      --accent:#b1ff00;       /* Verde lima para refuerzos positivos */
+      --warn:#ffd400;         /* Amarillo para advertencias */
+      --danger:#ff4d4d;       /* Rojo para errores */
+      --ok:#1dd1a1;           /* Verde bienestar */
+      --text:#e6f2ff;         /* Texto alto contraste */
+      --muted:#a8c3dc;        /* Texto secundario */
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius: 16px;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: linear-gradient(180deg, #0b0f14 0%, #0c1320 60%, #0b0f14 100%);
+      color:var(--text);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:16px;}
+    .hidden{display:none !important;}
+    button, .btn{
+      background:linear-gradient(180deg, #0fd8ff, #00b4d8);
+      border:none; color:#05121d; font-weight:800; letter-spacing:.3px; 
+      padding:12px 16px; border-radius:12px; cursor:pointer; box-shadow:var(--shadow);
+    }
+    button:focus-visible{outline:3px solid var(--warn); outline-offset:2px;}
+    .btn-ghost{background:#1a2233; color:var(--text);} 
+    .btn-danger{background:linear-gradient(180deg, #ff7b7b, #ff4d4d); color:#300;}
+    .btn-ok{background:linear-gradient(180deg, #7bffb3, #1dd1a1); color:#052;}
+
+    /* Tarjetas y paneles */
+    .panel{background:var(--panel); border:1px solid #1f2a3c; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);} 
+    .card{background:var(--card); border:1px solid #22334a; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);} 
+
+    header.app{
+      position:sticky; top:0; z-index:10; backdrop-filter: blur(6px);
+      background:rgba(5,14,24,.65); border-bottom:1px solid #162233;
+    }
+    header .brand{display:flex; align-items:center; gap:10px;}
+    .brand .logo{font-size:28px} 
+    .brand h1{font-size:18px; margin:0; color:var(--primary)}
+    .brand small{color:var(--muted)}
+
+    /* =====================
+       PANTALLA 1: DOJO
+       ===================== */
+    .dojo-grid{display:grid; grid-template-columns: 1.2fr 1fr; gap:16px;}
+    @media (max-width:900px){.dojo-grid{grid-template-columns:1fr;}}
+    .sensei{
+      display:flex; gap:16px; align-items:center; background: radial-gradient(1200px 400px at -20% -30%, rgba(0,217,255,.18), transparent), var(--card);
+      border:1px solid #234; border-radius:var(--radius); padding:16px; 
+    }
+    .sensei .avatar{font-size:56px;}
+    .sensei h2{margin:0 0 6px 0;}
+
+    /* Lista de 4 estrategias con micro animaciones */
+    .estrategias{display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:12px;}
+    @media (max-width:700px){.estrategias{grid-template-columns:1fr;}}
+    .estrategia{position:relative; overflow:hidden}
+    .estrategia h3{margin:0 0 8px 0; font-size:18px; color:var(--accent)}
+    .mini-arena{display:flex; gap:12px; align-items:center}
+    .mini-ava{font-size:28px}
+    .bad{animation: sacudida .6s ease-in-out infinite alternate; filter: hue-rotate(-20deg)}
+    .good{animation: saludar 1.5s ease-in-out infinite}
+    @keyframes sacudida{from{transform: translateX(0)} to{transform: translateX(-4px)}}
+    @keyframes saludar{
+      0%{transform: translateY(0) rotate(0)}
+      50%{transform: translateY(-3px) rotate(-6deg)}
+      100%{transform: translateY(0) rotate(0)}
+    }
+
+    /* Texto animado de intro */
+    .type{ border-left:3px solid var(--primary); padding-left:12px;}
+    .type span{display:inline-block}
+    .blink{animation:blink 1.1s steps(2,end) infinite;}
+    @keyframes blink{50%{opacity:0}}
+
+    /* =====================
+       PANTALLA 2: ARENA
+       ===================== */
+    .arena{display:grid; grid-template-columns: 1fr 320px; gap:16px;}
+    @media (max-width:1000px){.arena{grid-template-columns:1fr;}}
+
+    .statusbar{display:flex; gap:12px; align-items:center}
+    .hp{flex:1; background:#0a1422; border-radius:10px; border:1px solid #1f3047; height:18px; overflow:hidden; position:relative}
+    .hp .fill{height:100%; width:100%; background:linear-gradient(90deg, var(--ok), #a6ff00); transition: width .45s ease}
+    .hp.low .fill{background:linear-gradient(90deg, var(--warn), #ffae00)}
+    .hp.critical .fill{background:linear-gradient(90deg, var(--danger), #b30000)}
+
+    .avatars{display:flex; justify-content:space-between; gap:12px}
+    .avatar-box{flex:1; display:flex; gap:12px; align-items:center; background:var(--card); border:1px solid #23344a; border-radius:var(--radius); padding:12px}
+    .avatar-emoji{font-size:42px}
+
+    .chat{height:220px; overflow:auto; background:#0a1422; border:1px solid #1c2a40; border-radius:var(--radius); padding:12px}
+    .msg{margin:8px 0;}
+    .msg small{color:var(--muted)}
+    .msg .bubble{display:inline-block; background:#19273b; border:1px solid #21334a; padding:8px 10px; border-radius:10px}
+    .msg.enemy .bubble{background:#2a1a1a; border-color:#412121}
+    .msg.system .bubble{background:#132a1d; border-color:#1e4530}
+
+    .actions{display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:12px}
+    @media (max-width:560px){.actions{grid-template-columns:1fr}}
+    .group{background:var(--panel); border:1px solid #20314a; border-radius:var(--radius); padding:12px}
+    .group h4{margin:0 0 8px 0; color:var(--primary)}
+    .grid4{display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:8px}
+    .move{width:100%}
+
+    /* Panel emergente para escenarios */
+    .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:50}
+    .modal .dialog{max-width:720px; margin:12px; background:var(--panel); border:1px solid #2a3d59; border-radius:18px; box-shadow:var(--shadow)}
+    .dialog header{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #21334d}
+    .dialog h3{margin:0; color:var(--accent)}
+    .dialog .content{padding:16px}
+    .options{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px}
+    @media (max-width:700px){.options{grid-template-columns:1fr}}
+    .opt{display:flex; gap:8px; align-items:center; justify-content:flex-start; font-weight:700}
+
+    /* =====================
+       PANTALLA 3: RESULTADOS
+       ===================== */
+    .result h2{margin-top:0}
+    .summary{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px}
+    @media (max-width:700px){.summary{grid-template-columns:1fr}}
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#10263a; border:1px solid #1d3a57}
+
+    /* Ranking */
+    table{width:100%; border-collapse:collapse;}
+    th,td{border:1px solid #27425e; padding:8px; text-align:left}
+    th{background:#10263a}
+
+    /* Utilidades */
+    .center{text-align:center}
+    .muted{color:var(--muted)}
+    .spacer{height:8px}
+  </style>
+</head>
+<body>
+  <header class="app">
+    <div class="container" aria-live="polite">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🎖️</div>
+        <div>
+          <h1>Embajadores del Juego Limpio</h1>
+          <small>El Duelo de Estrategias — Ciudadanía Digital</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ===================== DOJO DEL RESPETO ===================== -->
+    <section id="screen-dojo" class="panel" aria-label="Dojo del Respeto">
+      <div class="dojo-grid">
+        <div class="sensei" role="region" aria-label="Maestro del Juego Limpio">
+          <div class="avatar" aria-hidden="true">🧙‍♂️</div>
+          <div>
+            <h2>Maestro del Juego Limpio</h2>
+            <p class="type" id="introText"><span>Bienvenido, Embajador. En este Dojo aprenderás a combatir sin perder tu bienestar <span class="blink">▌</span></span></p>
+            <p class="muted">Narración activada con voz para accesibilidad. Puedes silenciarla en la Arena.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Estrategias clave</h3>
+          <div class="estrategias">
+            <!-- Respeto de Turnos -->
+            <div class="card estrategia">
+              <h3>1) Respeto de Turnos</h3>
+              <div class="mini-arena">
+                <div class="mini-ava good" aria-hidden="true">🧑‍🎮</div>
+                <div>
+                  <div class="badge">✅ Correcto: Esperar tu turno para hablar/escribir.</div>
+                  <div class="spacer"></div>
+                  <div class="badge">❌ Incorrecto: Interrumpir o saturar el chat.</div>
+                </div>
+              </div>
+            </div>
+            <!-- Lenguaje respetuoso -->
+            <div class="card estrategia">
+              <h3>2) Lenguaje Respetuoso</h3>
+              <div class="mini-arena">
+                <div class="mini-ava good" aria-hidden="true">🗣️</div>
+                <div>
+                  <div class="badge">✅ Correcto: Mensajes amables y claros.</div>
+                  <div class="spacer"></div>
+                  <div class="badge">❌ Incorrecto: Insultos o burlas.</div>
+                </div>
+              </div>
+            </div>
+            <!-- Saber Cuándo Retirarse -->
+            <div class="card estrategia">
+              <h3>3) Saber Cuándo Retirarse</h3>
+              <div class="mini-arena">
+                <div class="mini-ava good" aria-hidden="true">🚪</div>
+                <div>
+                  <div class="badge">✅ Correcto: Tomar distancia ante toxicidad persistente.</div>
+                  <div class="spacer"></div>
+                  <div class="badge">❌ Incorrecto: Seguir discutiendo sin fin.</div>
+                </div>
+              </div>
+            </div>
+            <!-- Saber Cuándo Pedir Ayuda -->
+            <div class="card estrategia">
+              <h3>4) Saber Cuándo Pedir Ayuda</h3>
+              <div class="mini-arena">
+                <div class="mini-ava good" aria-hidden="true">🚩</div>
+                <div>
+                  <div class="badge">✅ Correcto: Llamar al guardián/moderador.</div>
+                  <div class="spacer"></div>
+                  <div class="badge">❌ Incorrecto: Guardarse el problema.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <p class="center muted">“Recuerda, Embajador: ganar es importante, pero ganar con honor es la verdadera victoria.”</p>
+          <div class="center">
+            <button id="btnStart" aria-label="Entrar a la Arena">Entrar a la Arena ▶️</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ARENA DE DUELOS DIGITALES ===================== -->
+    <section id="screen-arena" class="panel hidden" aria-label="Arena de Duelos Digitales">
+      <div class="statusbar" role="status" aria-live="polite">
+        <strong>Medidor de Bienestar:</strong>
+        <div class="hp" id="hpBar" aria-label="Nivel de Bienestar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="fill" id="hpFill"></div>
+        </div>
+        <span id="hpText">100%</span>
+        <button class="btn-ghost" id="toggleVoice" aria-pressed="true" aria-label="Alternar narración">🔊 Voz: ON</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="arena">
+        <div>
+          <div class="avatars">
+            <div class="avatar-box" aria-label="Avatar del Embajador">
+              <div class="avatar-emoji" aria-hidden="true">🛡️</div>
+              <div>
+                <div><strong>Embajador</strong></div>
+                <small class="muted">Movimientos de Paz: <span id="peaceCount">1</span></small>
+              </div>
+            </div>
+            <div class="avatar-box" aria-label="Avatar del Oponente">
+              <div class="avatar-emoji" id="opponentEmoji" aria-hidden="true">😈</div>
+              <div>
+                <div><strong id="opponentName">Troll Novato</strong></div>
+                <small class="muted">Táctica: Comentarios sarcásticos</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="chat" id="chat" aria-live="polite" aria-label="Chat del duelo"></div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="actions">
+          <div class="group">
+            <h4>Acciones Normales</h4>
+            <div class="grid4">
+              <button class="move" id="atk1" aria-label="Escribir tu jugada con calma">Jugada Serena ✍️</button>
+              <button class="move" id="atk2" aria-label="Esperar turno">Esperar Turno ⏳</button>
+              <button class="move" id="atk3" aria-label="Explicar tu idea">Explicar Idea 💡</button>
+              <button class="move" id="atk4" aria-label="Respirar profundo">Respirar Profundo 🫁</button>
+            </div>
+          </div>
+          <div class="group">
+            <h4>Movimientos de Paz</h4>
+            <div class="grid4">
+              <button class="move btn-ok" id="peace1" aria-label="Bumerán de Amabilidad">Bumerán de Amabilidad 😊</button>
+              <button class="move btn-ok" id="peace2" aria-label="Portal de Retirada">Portal de Retirada 🚪</button>
+              <button class="move btn-ok" id="peace3" aria-label="Llamar al Guardián">Llamar al Guardián 🚩</button>
+              <button class="move btn-ok" id="peace4" aria-label="Ignorar con Escudo">Ignorar 🛡️</button>
+            </div>
+            <small class="muted">Algunos movimientos se desbloquean al mejorar tu ranking.</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTADOS ===================== -->
+    <section id="screen-result" class="panel hidden" aria-label="Resultados del Duelo">
+      <div class="result">
+        <h2 id="resultTitle">Resultado</h2>
+        <p id="resultMsg" class="muted"></p>
+        <div class="summary">
+          <div class="card"><strong>Acciones correctas:</strong> <span id="sumRight">0</span></div>
+          <div class="card"><strong>Errores cometidos:</strong> <span id="sumWrong">0</span></div>
+          <div class="card"><strong>Estrategias usadas:</strong> <span id="sumStrats">-</span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="card" id="award" aria-live="polite"></div>
+        <div class="spacer"></div>
+        <div class="panel">
+          <h3>Ranking de Embajadores</h3>
+          <table aria-label="Tabla de ranking">
+            <thead><tr><th>Puesto</th><th>Jugador</th><th>Puntaje</th><th>Oponente vencido</th></tr></thead>
+            <tbody id="rankBody"></tbody>
+          </table>
+        </div>
+        <div class="center">
+          <button id="btnReplay">Jugar de nuevo 🔁</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =============== MODAL ESCENARIOS =============== -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="scenarioTitle">
+    <div class="dialog">
+      <header>
+        <h3 id="scenarioTitle">Escenario</h3>
+        <button class="btn-ghost" id="closeModal" aria-label="Cerrar">✖</button>
+      </header>
+      <div class="content">
+        <p id="scenarioText"></p>
+        <div class="options">
+          <!-- Botones dinámicos -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================
+       LÓGICA DEL JUEGO (JavaScript puro, sin dependencias)
+       ===================================================== */
+
+    // ---------------- UTILIDADES DE AUDIO/VOZ ----------------
+    const audioCtx = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
+    function beep({freq=660, dur=0.12, type='sine', vol=0.09}={}){
+      if(!audioCtx) return;
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.type=type; o.frequency.value=freq; g.gain.value=vol;
+      o.connect(g).connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime+dur);
+    }
+    const sfx={
+      ok(){beep({freq:880, dur:.09, type:'triangle'}); setTimeout(()=>beep({freq:1320, dur:.12, type:'triangle'}),90)},
+      bad(){beep({freq:180, dur:.12, type:'sawtooth'}); setTimeout(()=>beep({freq:160, dur:.18, type:'sawtooth'}),100)},
+      narr(){beep({freq:520, dur:.05, type:'square'})}
+    };
+
+    let voiceOn = true;
+    function speak(text){
+      if(!voiceOn) return;
+      try{
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'es-ES';
+        u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      }catch(e){/* Silenciar si no disponible */}
+    }
+
+    // --------------- ESTADO GLOBAL ---------------
+    const $ = sel => document.querySelector(sel);
+    const chatEl = $('#chat');
+    const hpBar = $('#hpBar');
+    const hpFill = $('#hpFill');
+    const hpText = $('#hpText');
+    const peaceCountEl = $('#peaceCount');
+
+    const state = {
+      wellness: 100,           // Medidor de Bienestar
+      right: 0,
+      wrong: 0,
+      usedStrats: new Set(),   // Estrategias aplicadas
+      peaceMoves: 1,           // Usos especiales disponibles (crece con ranking)
+      turn: 1,
+      opponent: {name:'Troll Novato', emoji:'😈', tier:1},
+      scenariosQueue: [],      // se barajan al iniciar
+      inDecision: false
+    };
+
+    // --------------- ESCENARIOS DE DECISIÓN ---------------
+    // Cada escenario tiene: title, prompt, options[{label, key, correct, strat}]
+    const SCENARIOS = [
+      {
+        title: 'El Impaciente',
+        prompt: 'El oponente te presiona para que termines rápido: "¡Apúrate, tardas mucho!"',
+        options: [
+          {label:'Ignorar 🛡️', key:'ignorar', correct:true,  strat:'Respeto de Turnos', voice:'¡Paciencia de maestro!'},
+          {label:'Responder con calma 😊', key:'calma', correct:true, strat:'Lenguaje Respetuoso', voice:'¡Desarmaste el enojo con amabilidad!'},
+          {label:'Insultar 😠', key:'insultar', correct:false}
+        ]
+      },
+      {
+        title: 'La Burla por un Error',
+        prompt: 'Se burlan de tu fallo: "Jaja, fallaste, qué malo"',
+        options: [
+          {label:'Insultar 😠', key:'insultar', correct:false},
+          {label:'Bumerán de Amabilidad 😊', key:'bumeran', correct:true, strat:'Lenguaje Respetuoso', voice:'¡Desarmaste el enojo con amabilidad!'},
+          {label:'Llamar al Guardián 🚩', key:'guardian', correct:true, strat:'Saber Cuándo Pedir Ayuda', voice:'¡Llamaste al guardián en el momento justo!'}
+        ]
+      },
+      {
+        title: 'El Insistente',
+        prompt: 'Mensajes continuos y molestos que no paran.',
+        options: [
+          {label:'Pedir que pare', key:'pedir', correct:true, strat:'Lenguaje Respetuoso', voice:'¡Desarmaste el enojo con amabilidad!'},
+          {label:'Portal de Retirada 🚪', key:'retirada', correct:true, strat:'Saber Cuándo Retirarse', voice:'¡Decisión valiente!'},
+          {label:'Insultar 😠', key:'insultar', correct:false}
+        ]
+      },
+      {
+        title: 'El Acusador Falso',
+        prompt: 'Te acusan de hacer trampa sin pruebas.',
+        options: [
+          {label:'Defenderse', key:'defender', correct:true, strat:'Lenguaje Respetuoso', voice:'¡Desarmaste el enojo con amabilidad!'},
+          {label:'Llamar al Guardián 🚩', key:'guardian', correct:true, strat:'Saber Cuándo Pedir Ayuda', voice:'¡Llamaste al guardián en el momento justo!'},
+          {label:'Insultar 😠', key:'insultar', correct:false}
+        ]
+      },
+      {
+        title:'El Mal Perdedor',
+        prompt:'El oponente pierde y te insulta en el chat.',
+        options:[
+          {label:'Burlarse', key:'burlar', correct:false},
+          {label:'Bumerán de Amabilidad 😊', key:'bumeran', correct:true, strat:'Lenguaje Respetuoso', voice:'¡Desarmaste el enojo con amabilidad!'},
+          {label:'Ignorar 🛡️', key:'ignorar', correct:true, strat:'Respeto de Turnos', voice:'¡Paciencia de maestro!'}
+        ]
+      }
+    ];
+
+    // --------------- OPONENTES Y DESBLOQUEOS ---------------
+    const OPPONENTS = [
+      {name:'Troll Novato', emoji:'😈', tier:1},
+      {name:'Sarcasmo Sutil', emoji:'🌀', tier:2},
+      {name:'Acusador Pro', emoji:'👺', tier:3}
+    ];
+
+    function loadProgress(){
+      const saved = JSON.parse(localStorage.getItem('embajadoresProgress')||'{}');
+      // Aumenta movimientos de paz según mejores puntajes
+      if(saved.bestScore>=80) state.peaceMoves = 3; else if(saved.bestScore>=60) state.peaceMoves = 2; else state.peaceMoves = 1;
+      // Desbloquea oponente por score
+      if(saved.bestScore>=70) state.opponent = OPPONENTS[1];
+      if(saved.bestScore>=90) state.opponent = OPPONENTS[2];
+      updateOpponentUI();
+      peaceCountEl.textContent = state.peaceMoves;
+    }
+
+    function saveRanking(entry){
+      const store = JSON.parse(localStorage.getItem('embajadoresRanking')||'[]');
+      store.push(entry);
+      store.sort((a,b)=>b.score-a.score); // mayor primero
+      localStorage.setItem('embajadoresRanking', JSON.stringify(store.slice(0,10)));
+      // Mejor puntaje
+      const best = (store[0]?.score)||entry.score;
+      localStorage.setItem('embajadoresProgress', JSON.stringify({bestScore:best}));
+    }
+
+    function renderRanking(){
+      const store = JSON.parse(localStorage.getItem('embajadoresRanking')||'[]');
+      const body = $('#rankBody'); body.innerHTML = '';
+      store.forEach((r,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${r.name}</td><td>${r.score}</td><td>${r.opp}</td>`;
+        body.appendChild(tr);
+      });
+    }
+
+    // --------------- UI: BARRA DE BIENESTAR ---------------
+    function setWellness(value){
+      state.wellness = Math.max(0, Math.min(100, value));
+      const pct = state.wellness;
+      hpFill.style.width = pct+'%';
+      hpText.textContent = pct+'%';
+      hpBar.classList.toggle('low', pct<=60 && pct>30);
+      hpBar.classList.toggle('critical', pct<=30);
+      hpBar.setAttribute('aria-valuenow', pct);
+    }
+
+    // --------------- CHAT ---------------
+    function addMsg(type, text){
+      const wrap = document.createElement('div');
+      wrap.className = `msg ${type}`;
+      wrap.innerHTML = `<div class="bubble">${text}</div><div><small>${new Date().toLocaleTimeString()}</small></div>`;
+      chatEl.appendChild(wrap); chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    // --------------- ARENA FLOW ---------------
+    function updateOpponentUI(){
+      $('#opponentName').textContent = state.opponent.name;
+      $('#opponentEmoji').textContent = state.opponent.emoji;
+    }
+
+    function startArena(){
+      // Inicializar estado
+      setWellness(100); state.right=0; state.wrong=0; state.usedStrats.clear(); state.turn=1; state.inDecision=false;
+      // Barajar escenarios
+      state.scenariosQueue = shuffle([...SCENARIOS]);
+      chatEl.innerHTML = '';
+      addMsg('system', '¡El duelo ha comenzado! Mantén tu bienestar alto.');
+      speak('¡El duelo ha comenzado! Mantén tu bienestar alto.');
+      turnLoop('inicio');
+    }
+
+    function turnLoop(from){
+      // Cada turno el jugador actúa; 50% de probabilidad de evento tóxico antes del siguiente turno
+      addMsg('system', `Turno ${state.turn}. Elige tu acción.`);
+      if(Math.random()<0.5){
+        setTimeout(triggerToxic, 800);
+      }else{
+        // Oponente hace comentario neutral
+        setTimeout(()=>{
+          addMsg('enemy', 'El oponente espera tu jugada...');
+        }, 700);
+      }
+    }
+
+    function triggerToxic(){
+      const sc = state.scenariosQueue.shift() || shuffle([...SCENARIOS])[0];
+      state.scenariosQueue.push(sc); // reciclar
+      addMsg('enemy', `Ataque tóxico: <em>${sc.title}</em>`);
+      sfx.narr();
+      speak(`Ataque tóxico: ${sc.title}`);
+      showScenario(sc);
+    }
+
+    // --------------- MODAL DE ESCENARIOS ---------------
+    const modal = $('#modal');
+    const optionsBox = modal.querySelector('.options');
+    const scenarioTitle = $('#scenarioTitle');
+    const scenarioText = $('#scenarioText');
+
+    function showScenario(sc){
+      state.inDecision = true;
+      scenarioTitle.textContent = sc.title;
+      scenarioText.textContent = sc.prompt;
+      optionsBox.innerHTML = '';
+      sc.options.forEach(opt=>{
+        const btn = document.createElement('button');
+        btn.className = 'btn opt';
+        btn.innerHTML = `<span aria-hidden="true">${iconFor(opt.key)}</span> <span>${opt.label}</span>`;
+        btn.setAttribute('aria-label', opt.label);
+        btn.onclick = ()=>resolveScenario(sc, opt);
+        optionsBox.appendChild(btn);
+      });
+      modal.classList.remove('hidden');
+    }
+
+    function iconFor(key){
+      const map={ignorar:'🛡️', calma:'😊', insultar:'😠', bumeran:'😊', guardian:'🚩', retirada:'🚪', pedir:'💬', defender:'🛡️', burlar:'🙃'};
+      return map[key]||'✨';
+    }
+
+    function resolveScenario(sc, opt){
+      modal.classList.add('hidden');
+      state.inDecision = false;
+      if(opt.correct){
+        state.right++; sfx.ok();
+        if(opt.strat) state.usedStrats.add(opt.strat);
+        addMsg('system', `✔️ Respuesta correcta: ${opt.label}`);
+        speak(opt.voice || '¡Bien hecho!');
+        // Pequeño refuerzo visual: sumar 5 hasta máximo 100
+        setWellness(state.wellness + 5);
+      }else{
+        state.wrong++; sfx.bad();
+        addMsg('system', `❌ Respuesta incorrecta: ${opt.label}`);
+        speak('¡Cuidado! Bajar a su nivel solo te lastima a ti.');
+        // Penalización
+        setWellness(state.wellness - 20);
+        if(state.wellness<=0){
+          finish(false);
+          return;
+        }
+      }
+      // Pasar al siguiente turno
+      state.turn++;
+      if(state.turn>8){ // Duelo corto para móvil
+        finish(true);
+      }else{
+        turnLoop('afterDecision');
+      }
+    }
+
+    // --------------- ACCIONES DEL JUGADOR ---------------
+    function standardAction(name){
+      addMsg('player', `Usas ${name}.`);
+      // Mini beneficio: +2 bienestar por acciones serenas
+      setWellness(state.wellness+2);
+      if(Math.random()<0.6) triggerToxic(); else { state.turn++; if(state.turn>8) finish(true); }
+    }
+
+    function peaceMove(kind){
+      if(state.peaceMoves<=0){ addMsg('system','No te quedan Movimientos de Paz.'); sfx.bad(); return; }
+      state.peaceMoves--; peaceCountEl.textContent = state.peaceMoves;
+      if(kind==='bumeran'){ addMsg('player','Envías amabilidad de vuelta.'); setWellness(state.wellness+8); state.usedStrats.add('Lenguaje Respetuoso'); speak('¡Desarmaste el enojo con amabilidad!'); sfx.ok();}
+      if(kind==='retirada'){ addMsg('player','Te retiras un momento para respirar.'); setWellness(state.wellness+10); state.usedStrats.add('Saber Cuándo Retirarse'); speak('¡Decisión valiente!'); sfx.ok();}
+      if(kind==='guardian'){ addMsg('player','Contactas al guardián/moderador.'); setWellness(state.wellness+8); state.usedStrats.add('Saber Cuándo Pedir Ayuda'); speak('¡Llamaste al guardián en el momento justo!'); sfx.ok();}
+      if(kind==='ignorar'){ addMsg('player','Ignoras con tu escudo de calma.'); setWellness(state.wellness+6); state.usedStrats.add('Respeto de Turnos'); speak('¡Paciencia de maestro!'); sfx.ok();}
+      state.turn++;
+      if(state.turn>8) finish(true); else turnLoop('peace');
+    }
+
+    // --------------- FINALIZACIÓN ---------------
+    function finish(win){
+      // Mostrar pantalla de resultados
+      $('#screen-arena').classList.add('hidden');
+      $('#screen-result').classList.remove('hidden');
+      const right = state.right, wrong = state.wrong;
+      const strategies = [...state.usedStrats].join(', ') || '—';
+      $('#sumRight').textContent = right; $('#sumWrong').textContent = wrong; $('#sumStrats').textContent = strategies;
+
+      const score = Math.round(state.wellness + right*5 - wrong*3);
+      const victory = win && state.wellness>=60; // condición de victoria solicitada
+
+      const title = victory ? '¡Victoria con Honor!' : 'Derrota, pero con aprendizaje';
+      const msg = victory ? '¡Eres un maestro del Juego Limpio!' : 'Tu bienestar llegó a cero o muy bajo. Practica las estrategias y vuelve a intentar.';
+      $('#resultTitle').textContent = title; $('#resultMsg').textContent = msg;
+
+      const award = $('#award');
+      if(victory){
+        award.innerHTML = `
+          <div class="center">
+            <div style="font-size:44px">🥋✨</div>
+            <h3>Cinturón de Embajador de Honor</h3>
+            <p class="muted">Celebración: luces, saludo y aplausos virtuales.</p>
+          </div>`;
+        sfx.ok(); sfx.ok(); speak('¡Victoria! Cinturón de Embajador de Honor.');
+      }else{
+        award.innerHTML = `<p>El Maestro dice: "Los errores son parte del camino. Recuerda: evitar insultos, retirarte a tiempo y pedir ayuda protege tu bienestar."</p>`;
+        sfx.bad(); speak('Derrota. Pero has aprendido.');
+      }
+
+      // Guardar ranking
+      const entry = {name:'Embajador', score: Math.max(0,score), opp: state.opponent.name, ts: Date.now()};
+      saveRanking(entry);
+      renderRanking();
+
+      // Actualiza progresión para próximas partidas
+      loadProgress();
+    }
+
+    // --------------- NAV / INICIO ---------------
+    function showDojo(){
+      $('#screen-result').classList.add('hidden');
+      $('#screen-arena').classList.add('hidden');
+      $('#screen-dojo').classList.remove('hidden');
+      // Pequeño efecto de escritura
+      setTimeout(()=>speak('Bienvenido, Embajador. Estas son tus cuatro estrategias clave.'), 500);
+    }
+
+    function showArena(){
+      $('#screen-dojo').classList.add('hidden');
+      $('#screen-result').classList.add('hidden');
+      $('#screen-arena').classList.remove('hidden');
+      startArena();
+    }
+
+    // --------------- HELPERS ---------------
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]}
+      return arr;
+    }
+
+    // --------------- EVENTOS UI ---------------
+    $('#btnStart').addEventListener('click', ()=>{ showArena(); });
+    $('#btnReplay').addEventListener('click', ()=>{ showDojo(); });
+    $('#closeModal').addEventListener('click', ()=>{ modal.classList.add('hidden'); if(state.inDecision){ // si cierran, cuenta como omitir -> pequeño riesgo
+      setWellness(state.wellness-5); addMsg('system','Decisión omitida. Tu bienestar baja un poco.'); state.turn++; if(state.turn>8) finish(true); else turnLoop('omit'); }});
+
+    // Acciones normales
+    $('#atk1').onclick = ()=>standardAction('Jugada Serena');
+    $('#atk2').onclick = ()=>standardAction('Esperar Turno');
+    $('#atk3').onclick = ()=>standardAction('Explicar Idea');
+    $('#atk4').onclick = ()=>standardAction('Respirar Profundo');
+
+    // Movimientos de Paz (con desbloqueos por ranking, pero accesibles con usos limitados)
+    $('#peace1').onclick = ()=>peaceMove('bumeran');
+    $('#peace2').onclick = ()=>peaceMove('retirada');
+    $('#peace3').onclick = ()=>peaceMove('guardian');
+    $('#peace4').onclick = ()=>peaceMove('ignorar');
+
+    // Voz
+    $('#toggleVoice').onclick = (e)=>{
+      voiceOn = !voiceOn; e.currentTarget.setAttribute('aria-pressed', String(voiceOn));
+      e.currentTarget.textContent = voiceOn ? '🔊 Voz: ON' : '🔇 Voz: OFF';
+      if(!voiceOn){ try{speechSynthesis.cancel();}catch(_){} }
+    }
+
+    // Primer render
+    showDojo();
+    loadProgress();
+  </script>
+</body>
+</html>
