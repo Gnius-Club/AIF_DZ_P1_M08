@@ -1,619 +1,457 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Constructores de la Galaxia: Final Stable</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Embajadores del Juego Limpio</title>
+    <style>
+        :root {
+            --bg: #0b1423;
+            --panel: #1a2639;
+            --primary: #00d2ff;
+            --accent: #adff2f;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #ffffff;
+            --radius: 20px;
+        }
 
-<style>
-  /* ------------------------------
-     ESTILOS BASE
-     ------------------------------ */
-  :root{
-    --bg:#0b0f1a; --panel:#1e293b; --accent:#22d3ee;
-    --warn:#ef4444; --ok:#10b981; --text:#f8fafc; --gold:#f59e0b;
-  }
-  body{
-    margin:0; font-family: 'Segoe UI', system-ui, sans-serif;
-    background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
-    color:var(--text); height:100vh; overflow:hidden;
-    display:flex; flex-direction:column;
-  }
-  button{
-    background:linear-gradient(180deg, #38bdf8, #0ea5b7);
-    border:none; border-radius:8px; padding:10px 20px;
-    font-weight:bold; color:#0f172a; cursor:pointer;
-    box-shadow: 0 4px 0 #0284c7; transition:transform .1s;
-  }
-  button:active{ transform:translateY(4px); box-shadow:none; }
-  button:disabled{ filter:grayscale(1); cursor:not-allowed; }
-  .hidden{ display:none !important; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  /* ------------------------------
-     UI PRINCIPAL
-     ------------------------------ */
-  .topbar{
-    padding:10px 20px; background:rgba(0,0,0,0.4);
-    display:flex; justify-content:space-between; align-items:center;
-    height: 60px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
-  }
-  .lives-container { font-size: 24px; letter-spacing: 5px; }
-  .heart-lost { filter: grayscale(1) brightness(0.5); opacity: 0.5; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-  .hud-grid{
-    display:grid; grid-template-columns: 1fr 1fr 280px; gap:15px;
-    padding:15px; flex:1; overflow:hidden; position:relative;
-    padding-bottom: 80px; 
-  }
-  .panel{
-    background:var(--panel); border:2px solid #334155; border-radius:16px;
-    position:relative; display:flex; flex-direction:column;
-    transition: all 0.3s ease;
-    overflow: hidden; /* Importante para que el hijo no deforme el padre */
-  }
+        /* --- UTILIDADES --- */
+        .hidden { display: none !important; }
 
-  /* NAVE */
-  .ship-container{ flex:1; display:flex; align-items:center; justify-content:center; }
-  .ship-svg{ width:70%; max-height:300px; filter:drop-shadow(0 0 10px rgba(34,211,238,0.2)); transition: transform 0.5s; }
-  .piece{ fill:#334155; opacity:0.2; transition:all .5s; }
-  .piece.placed{ fill:url(#gradBlue); opacity:1; filter:drop-shadow(0 0 5px #38bdf8); }
-  .launch{ animation: flyUp 2s ease-in forwards; }
-  @keyframes flyUp{ 0%{transform:translateY(0)} 100%{transform:translateY(-800px)} }
-  
-  .damage-shake { animation: shakeRed 0.5s ease-in-out; }
-  @keyframes shakeRed{ 
-    0%,100%{transform:translateX(0); border-color:#334155;} 
-    25%{transform:translateX(-10px); border-color:var(--warn);} 
-    75%{transform:translateX(10px); border-color:var(--warn);} 
-  }
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: bold;
+            transition: transform 0.2s, background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
 
-  /* ------------------------------
-     AVATARES
-     ------------------------------ */
-  .avatars-grid{
-    display:grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-    gap:10px; padding:10px; height:100%; overflow:hidden;
-  }
-  .avatar-card{
-    background:#0f172a; border:2px solid #334155; border-radius:12px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    position:relative; transition: background .3s;
-  }
-  .avatar-icon{ font-size:40px; }
+        button:active { transform: scale(0.95); }
 
-  /* BURBUJAS */
-  .bubble-container {
-    position:absolute; top:-10px; right:-10px; z-index:20;
-    display:none; flex-direction:column; align-items:center;
-  }
-  .bubble-container.active { display:flex; }
-  .bubble-icon {
-    width:40px; height:40px; background:#fff; border:3px solid var(--warn);
-    border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:20px; color:#000; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    animation: bounce 0.5s infinite alternate;
-  }
-  .crisis-timer {
-    background: var(--warn); color: white; font-weight: bold;
-    font-size: 12px; padding: 2px 6px; border-radius: 10px;
-    margin-top: -8px; z-index: 22; border: 2px solid #fff;
-  }
-  @keyframes bounce{ from{transform:scale(1)} to{transform:scale(1.1)} }
+        .btn-lg {
+            padding: 20px 30px;
+            font-size: 1.2rem;
+            width: 100%;
+            max-width: 300px;
+        }
 
-  /* ------------------------------
-     HERRAMIENTAS Y CHAT (CORREGIDO)
-     ------------------------------ */
-  .tools-row{
-    display:flex; justify-content:space-around; padding:15px 5px;
-    background:#1e293b; border-bottom:1px solid #334155; flex-shrink: 0;
-  }
-  .tool{
-    width:60px; height:60px; background:#334155; border-radius:12px;
-    font-size:32px; display:flex; align-items:center; justify-content:center;
-    cursor:grab; border:3px solid transparent; position:relative; user-select:none;
-  }
-  .tool:active{ cursor:grabbing; }
-  .tool.glow { border-color:var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .btn-primary { background: linear-gradient(180deg, var(--primary), #009ecc); color: #000; }
+        .btn-secondary { background: #34495e; color: white; }
+        .btn-danger { background: var(--danger); color: white; }
 
-  /* CORRECCIÓN DEL CHAT: Scroll interno y altura controlada */
-  .chat-box{ 
-    flex: 1; 
-    padding: 10px; 
-    font-size: 13px; 
-    overflow-y: auto; /* Scroll vertical */
-    display: flex; 
-    flex-direction: column-reverse; /* Mensajes nuevos abajo visualmente si usas prepend, o arriba si append */
-    min-height: 0; /* TRUCO FLEXBOX: Permite que el contenedor se encoja si es necesario */
-  }
-  /* Estilizado del scrollbar para que se vea moderno */
-  .chat-box::-webkit-scrollbar { width: 6px; }
-  .chat-box::-webkit-scrollbar-track { background: #0f172a; }
-  .chat-box::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        /* --- HEADER & CONTROLES --- */
+        header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+        }
 
-  .chat-msg{ 
-    margin-bottom:5px; padding:5px 8px; background:rgba(255,255,255,0.05); 
-    border-radius:6px; animation: fadeIn .2s; flex-shrink: 0;
-  }
-  .chat-msg.bad{ color:var(--warn); }
-  .chat-msg.good{ color:var(--ok); }
-  @keyframes fadeIn{ from{opacity:0; transform:translateX(-5px)} to{opacity:1; transform:translateX(0)} }
+        #audio-toggle {
+            background: var(--panel);
+            color: white;
+            padding: 10px 15px;
+            font-size: 1.5rem;
+            border: 1px solid var(--primary);
+        }
 
-  /* ------------------------------
-     TUTORIAL & MODALES
-     ------------------------------ */
-  #tutorial-bar {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
-    background: #0f172a; border-top: 2px solid var(--accent);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; z-index: 5000;
-    transform: translateY(100%); transition: transform 0.3s;
-  }
-  #tutorial-bar.active { transform: translateY(0); }
-  
-  #tutorial-hand {
-    position: fixed; top: 0; left: 0; z-index: 6000;
-    font-size: 50px; pointer-events: none; display: none;
-    transition: top 1.5s ease-in-out, left 1.5s ease-in-out;
-  }
-  #tutorial-hand.active { display: block; }
+        /* --- PANTALLAS --- */
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+        }
 
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9000;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .modal-card{
-    background:#1e293b; padding:30px; border-radius:20px; text-align:center; max-width:500px;
-    border:1px solid #475569; box-shadow: 0 0 50px rgba(0,0,0,0.8);
-  }
-  
-  .spotlight-darken { filter: brightness(0.2) grayscale(0.8); pointer-events: none; }
-  .panel.spotlight-active { filter: brightness(1); pointer-events: auto; z-index: 100; box-shadow: 0 0 0 2000px rgba(0,0,0,0.8); }
+        /* --- TUTORIAL --- */
+        .tutorial-card {
+            background: var(--panel);
+            padding: 25px;
+            border-radius: var(--radius);
+            border: 5px solid var(--primary);
+            max-width: 500px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s;
+        }
 
-  svg{ width:0; height:0; position:absolute; }
-</style>
+        .tutorial-card .icon { font-size: 5rem; display: block; margin-bottom: 10px; }
+
+        /* --- ARENA DE DUELO --- */
+        .arena-grid {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .status-bar {
+            width: 100%;
+            height: 35px;
+            background: #000;
+            border-radius: 50px;
+            border: 3px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #wellbeing-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--danger), var(--success));
+            transition: width 0.5s ease;
+        }
+
+        .battle-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: var(--radius);
+        }
+
+        .char { font-size: 4rem; }
+
+        .chat-bubble {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: var(--radius);
+            position: relative;
+            font-weight: 500;
+            font-size: 1.2rem;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .actions-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .actions-menu { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .btn-action {
+            background: var(--panel);
+            border: 2px solid var(--primary);
+            color: white;
+            padding: 15px 5px;
+            flex-direction: column;
+            font-size: 0.9rem;
+        }
+
+        /* --- MODAL --- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--panel);
+            padding: 30px;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            border: 3px solid var(--accent);
+        }
+
+        /* --- ANIMACIONES --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-10px); } 75% { transform: translate(10px); } }
+
+    </style>
 </head>
 <body>
 
-<svg>
-  <defs>
-    <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-</svg>
+    <header>
+        <div style="font-weight: bold; font-size: 0.9rem;">🛡️ EMBAJADORES</div>
+        <button id="audio-toggle" title="Activar/Desactivar Audio">🔊</button>
+    </header>
 
-<div id="tutorial-hand">👆</div>
+    <!-- PANTALLA INICIO -->
+    <section id="screen-start" class="screen">
+        <div style="font-size: 6rem;">🧙‍♂️</div>
+        <h1>¿Listo para el Duelo?</h1>
+        <p>Aprende a jugar con respeto y gana con honor.</p>
+        <button onclick="startTutorial()" class="btn-lg btn-primary" style="margin-bottom: 10px;">Ver Tutorial 📖</button>
+        <button onclick="startGame()" class="btn-lg btn-secondary">Saltar e Ir a Jugar ⚡</button>
+    </section>
 
-<div id="tutorial-bar">
-  <div id="tutorial-text" style="font-size:18px; color:var(--accent); flex:1; margin-right:20px;">...</div>
-  <button id="btn-next-step" onclick="Tutorial.nextStep()">Siguiente ▶</button>
-</div>
-
-<!-- INICIO -->
-<div id="screen-start" class="modal-overlay">
-  <div class="modal-card">
-    <div style="font-size:50px; margin-bottom:10px;">🚀</div>
-    <h1>Constructores de la Galaxia</h1>
-    <p><strong>Edición Final</strong></p>
-    <p style="font-size:14px; color:#cbd5e1;">Dificultad Dinámica + Interfaz Estable</p>
-    <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-      <button onclick="Tutorial.start()">🎓 Entrenamiento</button>
-      <button onclick="Game.start()" style="background:#334155; color:#fff">🎮 Misión Real</button>
-    </div>
-  </div>
-</div>
-
-<!-- FIN -->
-<div id="screen-result" class="modal-overlay hidden">
-  <div class="modal-card">
-    <h1 id="res-title">...</h1>
-    <p id="res-msg">...</p>
-    <div id="res-stars" style="font-size:30px; margin:15px 0;"></div>
-    <button onclick="location.reload()">Menú Principal</button>
-  </div>
-</div>
-
-<!-- HUD -->
-<div class="topbar">
-  <div class="lives-container" id="lives-display">❤️❤️❤️</div>
-  <div style="text-align:center">
-    <div style="font-size:12px; opacity:0.7">TIEMPO</div>
-    <div id="timer" style="font-family:monospace; font-size:24px; color:var(--accent); line-height:1">03:00</div>
-  </div>
-</div>
-
-<div class="hud-grid" id="game-grid">
-  
-  <!-- NAVE -->
-  <div id="panel-ship" class="panel">
-    <h4 style="position:absolute; top:5px; left:15px; margin:0; opacity:0.5;">HANGAR</h4>
-    <div class="ship-container">
-      <svg class="ship-svg" viewBox="0 0 200 200" style="width:100%; height:100%; position:relative;">
-        <path id="p1" class="piece" d="M60 140 L140 140 L130 100 L70 100 Z" />
-        <circle id="p2" class="piece" cx="100" cy="100" r="25" />
-        <path id="p3" class="piece" d="M70 140 L40 170 L80 160 Z" />
-        <path id="p4" class="piece" d="M130 140 L160 170 L120 160 Z" />
-        <rect id="p5" class="piece" x="90" y="140" width="20" height="30" />
-        <circle id="p6" class="piece" cx="100" cy="70" r="5" fill="#f59e0b"/>
-      </svg>
-    </div>
-    <div style="text-align:center; padding:5px; color:#64748b" id="progress-txt">Piezas: 0/6</div>
-  </div>
-
-  <!-- EQUIPO -->
-  <div id="panel-team" class="panel">
-    <div class="avatars-grid">
-      <!-- Verde -->
-      <div id="av-verde" class="avatar-card" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
-        <div class="avatar-icon">🐸</div>
-        <div class="bubble-container" id="bub-av-verde">
-          <div class="bubble-icon"></div>
-          <div class="crisis-timer">10</div>
+    <!-- PANTALLA TUTORIAL -->
+    <section id="screen-tutorial" class="screen hidden">
+        <div id="tutorial-content" class="tutorial-card">
+            <span id="tuto-icon" class="icon">⏳</span>
+            <h2 id="tuto-title">Lección</h2>
+            <p id="tuto-text" style="font-size: 1.2rem; line-height: 1.4;"></p>
         </div>
-        <span style="font-size:12px;">Verde</span>
-      </div>
-      <!-- Rojo -->
-      <div id="av-rojo" class="avatar-card" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
-        <div class="avatar-icon">🦊</div>
-        <div class="bubble-container" id="bub-av-rojo">
-          <div class="bubble-icon"></div>
-          <div class="crisis-timer">10</div>
+        <div style="display: flex; gap: 10px; width: 100%; max-width: 500px;">
+            <button id="btn-tuto-next" class="btn-lg btn-primary" style="flex: 2;">Siguiente 🔊</button>
+            <button onclick="startGame()" class="btn-lg btn-secondary" style="flex: 1; font-size: 0.9rem;">Saltar</button>
         </div>
-        <span style="font-size:12px;">Rojo</span>
-      </div>
-      <!-- Capitán -->
-      <div id="av-cap" class="avatar-card" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
-        <div class="avatar-icon">🧑‍🚀</div>
-        <div class="bubble-container" id="bub-av-cap">
-          <div class="bubble-icon"></div>
-          <div class="crisis-timer">10</div>
+    </section>
+
+    <!-- PANTALLA ARENA -->
+    <section id="screen-arena" class="screen hidden">
+        <div class="arena-grid">
+            <div class="status-container">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+                    <span>Tu Bienestar</span>
+                    <span id="wellness-pct">100%</span>
+                </div>
+                <div class="status-bar"><div id="wellbeing-fill"></div></div>
+            </div>
+
+            <div class="battle-display">
+                <div class="char" id="player-img">🛡️</div>
+                <div style="font-weight: bold; color: var(--primary);">VS</div>
+                <div class="char" id="enemy-img">😈</div>
+            </div>
+
+            <div id="game-chat" class="chat-bubble">¡Es tu turno de jugar! Elige una acción.</div>
+
+            <div class="actions-menu">
+                <button class="btn-action" onclick="playerMove('sereno')"><span>✍️</span><span>Jugada Serena</span></button>
+                <button class="btn-action" onclick="playerMove('esperar')"><span>⏳</span><span>Esperar</span></button>
+                <button class="btn-action" onclick="playerMove('idea')"><span>💡</span><span>Idea</span></button>
+                <button class="btn-action" onclick="playerMove('respirar')"><span>🫁</span><span>Respirar</span></button>
+            </div>
         </div>
-        <span style="font-size:12px;">Tú</span>
-      </div>
-      <!-- Chat -->
-      <div id="target-chat" class="avatar-card" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
-        <div class="avatar-icon">💬</div>
-        <div class="bubble-container" id="bub-target-chat">
-          <div class="bubble-icon"></div>
-          <div class="crisis-timer">10</div>
+    </section>
+
+    <!-- PANTALLA RESULTADOS -->
+    <section id="screen-result" class="screen hidden">
+        <div id="result-icon" style="font-size: 7rem;">🏆</div>
+        <h1 id="result-title">¡Victoria!</h1>
+        <p id="result-msg" style="font-size: 1.2rem; max-width: 400px;"></p>
+        <button onclick="location.reload()" class="btn-lg btn-primary">Volver a Jugar 🔁</button>
+    </section>
+
+    <!-- MODAL DE DECISIONES -->
+    <div id="modal-decision" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="margin-top: 0; color: var(--primary);">¡Atención!</h2>
+            <p id="modal-prompt" style="font-size: 1.3rem; margin-bottom: 25px;"></p>
+            <div id="modal-options" style="display: flex; flex-direction: column; gap: 15px;"></div>
         </div>
-        <span style="font-size:12px;">Chat</span>
-      </div>
     </div>
-  </div>
 
-  <!-- HERRAMIENTAS -->
-  <div id="panel-tools" class="panel">
-    <div class="tools-row">
-      <div id="tool-plano" class="tool" draggable="true" ondragstart="drag(event)" title="Plano">📋</div>
-      <div id="tool-animo" class="tool" draggable="true" ondragstart="drag(event)" title="Ánimo">👍</div>
-      <div id="tool-mega" class="tool" draggable="true" ondragstart="drag(event)" title="Megáfono">📣</div>
-    </div>
-    <div class="chat-box" id="chat-log">
-      <div class="chat-msg">Sistema listo...</div>
-    </div>
-  </div>
+    <script>
+        /* --- ESTADO DEL JUEGO --- */
+        let bienestar = 100;
+        let audioEnabled = true;
+        let currentStep = 0;
+        let gameTurn = 0;
 
-</div>
+        const lecciones = [
+            { title: "Turnos", icon: "⏳", text: "En el juego y en la vida, todos merecen su oportunidad. ¡Respetar el turno demuestra que valoras a los demás!" },
+            { title: "Respeto", icon: "😊", text: "Las palabras son poderosas. Un insulto o una burla pueden herir. Usar un lenguaje amable te hace un verdadero ganador." },
+            { title: "Retirarse", icon: "🚪", text: "Si un jugador es grosero y no te diviertes, no tienes que aguantar. ¡Retirarte es proteger tu paz!" },
+            { title: "Pedir Ayuda", icon: "🚩", text: "Si alguien te hace sentir mal o te amenaza, no estás solo. ¡Llamar a un adulto es la jugada más fuerte!" }
+        ];
 
-<script>
-/* ========================================================
-   AUDIO & CONFIG
-   ======================================================== */
-const AudioEngine = {
-  ctx: new (window.AudioContext || window.webkitAudioContext)(),
-  playTone: function(type) {
-    if(this.ctx.state === 'suspended') this.ctx.resume();
-    const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    osc.connect(g); g.connect(this.ctx.destination);
-    const now = this.ctx.currentTime;
-    if(type === 'good') {
-      osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-      g.gain.setValueAtTime(0.1, now); osc.start(now); osc.stop(now + 0.2);
-    } else if(type === 'bad') {
-      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(80, now + 0.3);
-      g.gain.setValueAtTime(0.1, now); osc.start(now); osc.stop(now + 0.3);
-    } else if(type === 'warn') {
-      osc.type = 'square'; osc.frequency.setValueAtTime(400, now);
-      g.gain.setValueAtTime(0.05, now); osc.start(now); osc.stop(now + 0.1);
-    }
-  },
-  speak: function(text) {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'es-MX'; u.rate = 1.1;
-    window.speechSynthesis.speak(u);
-  }
-};
+        const escenarios = [
+            {
+                q: "El oponente dice: ¡Apúrate! ¡Eres muy lento!",
+                audio: "El oponente está impaciente y te grita. ¿Qué haces?",
+                opts: [
+                    { t: "Esperar con calma 🛡️", ok: true, msg: "¡Paciencia de maestro! El respeto de turnos mantiene el orden." },
+                    { t: "Responder enojado 😠", ok: false, msg: "¡Cuidado! Bajar a su nivel solo te lastima a ti." }
+                ]
+            },
+            {
+                q: "Se burlan de ti: ¡Jajaja, fallaste, qué malo!",
+                audio: "Se están burlando de tu error. ¿Cómo respondes?",
+                opts: [
+                    { t: "Ser amable 😊", ok: true, msg: "¡Increíble! Desarmaste el enojo con amabilidad." },
+                    { t: "Insultar 😠", ok: false, msg: "Las palabras hirientes bajan tu propio bienestar. ¡Mantén tu honor!" }
+                ]
+            },
+            {
+                q: "Te dicen: ¡Dame tus puntos o te reporto!",
+                audio: "Te están amenazando injustamente. ¿A quién llamas?",
+                opts: [
+                    { t: "Llamar al Guardián 🚩", ok: true, msg: "¡La jugada correcta! Dejas que los expertos manejen los problemas." },
+                    { t: "Seguir peleando 😠", ok: false, msg: "Pedir ayuda a un adulto es la jugada más inteligente." }
+                ]
+            }
+        ];
 
-/* ========================================================
-   ESTADO DEL JUEGO
-   ======================================================== */
-const State = {
-  mode: 'MENU', timer: 180, lives: 3, buildStep: 1,
-  activeCrises: {}, nextSpawnTimes: {}, tutorialIdx: -1, waitingAction: false
-};
+        /* --- FUNCIONES AUDIO --- */
+        document.getElementById('audio-toggle').onclick = function() {
+            audioEnabled = !audioEnabled;
+            this.innerText = audioEnabled ? "🔊" : "🔇";
+            if (!audioEnabled) window.speechSynthesis.cancel();
+        };
 
-const UI = {
-  el: id => document.getElementById(id),
-  panels: ['panel-ship', 'panel-team', 'panel-tools'],
-  
-  // CORRECCIÓN DE LOG: Limitar mensajes a 15 para no saturar memoria
-  log: (msg, type='') => {
-    const div = document.createElement('div');
-    div.className = `chat-msg ${type}`;
-    div.innerText = msg;
-    const box = UI.el('chat-log');
-    box.prepend(div);
-    // Eliminar mensajes viejos si hay más de 15
-    if(box.children.length > 15) {
-      box.removeChild(box.lastChild);
-    }
-  },
-  
-  updateLives: () => {
-    let hearts = "";
-    for(let i=0; i<3; i++) hearts += (i < State.lives) ? "❤️" : "<span class='heart-lost'>💔</span>";
-    UI.el('lives-display').innerHTML = hearts;
-  },
-  reset: () => {
-    for(let i=1; i<=6; i++) UI.el(`p${i}`).classList.remove('placed');
-    UI.el('progress-txt').innerText = "0/6";
-    UI.el('chat-log').innerHTML = "";
-    document.querySelectorAll('.bubble-container').forEach(b => {
-      b.classList.remove('active');
-      b.querySelector('.bubble-icon').innerText = "";
-    });
-    document.querySelectorAll('.tool').forEach(t => t.classList.remove('glow'));
-    UI.unspotlight();
-    State.lives = 3;
-    State.activeCrises = {};
-    State.nextSpawnTimes = {}; 
-    UI.updateLives();
-  },
-  spotlight: (panelId) => {
-    UI.panels.forEach(pid => {
-      const p = UI.el(pid);
-      if(panelId === 'all' || pid === panelId) {
-        p.classList.add('spotlight-active'); p.classList.remove('spotlight-darken');
-      } else {
-        p.classList.remove('spotlight-active'); p.classList.add('spotlight-darken');
-      }
-    });
-  },
-  unspotlight: () => UI.panels.forEach(pid => UI.el(pid).classList.remove('spotlight-active', 'spotlight-darken'))
-};
-
-/* ========================================================
-   GAME LOOP LÓGICA
-   ======================================================== */
-const Game = {
-  loopInterval: null,
-
-  start: () => {
-    State.mode = 'GAME';
-    UI.el('screen-start').classList.add('hidden');
-    UI.reset();
-    State.timer = 180;
-    State.buildStep = 1;
-    
-    // TIEMPOS INICIALES
-    const targets = ['av-verde', 'av-rojo', 'target-chat', 'av-cap'];
-    targets.forEach(id => {
-      const delay = 3 + Math.floor(Math.random() * 5); 
-      State.nextSpawnTimes[id] = 180 - delay; 
-    });
-    
-    AudioEngine.speak("Misión iniciada. Los problemas aparecerán aleatoriamente entre 2 y 6 segundos.");
-    UI.log("🚀 Misión iniciada.", "good");
-    
-    Game.loopInterval = setInterval(Game.tick, 1000);
-  },
-
-  tick: () => {
-    if(State.mode !== 'GAME') return;
-
-    // 1. CONTROL DE TIEMPO
-    State.timer--;
-    const m = Math.floor(State.timer/60).toString().padStart(2,'0');
-    const s = (State.timer%60).toString().padStart(2,'0');
-    UI.el('timer').innerText = `${m}:${s}`;
-    
-    if(State.timer <= 0) { Game.over(State.buildStep > 6); return; }
-
-    // 2. CONSTRUCCIÓN AUTOMÁTICA
-    if(State.timer > 0 && State.timer % 28 === 12) Game.buildPiece();
-
-    // 3. GESTIÓN DE CRISIS MÚLTIPLES
-    const targets = ['av-verde', 'av-rojo', 'target-chat', 'av-cap'];
-
-    targets.forEach(id => {
-      // SI YA TIENE CRISIS
-      if(State.activeCrises[id]) {
-        const crisis = State.activeCrises[id];
-        crisis.timer--;
-        
-        const activeBubble = UI.el("bub-"+id);
-        if(activeBubble) activeBubble.querySelector('.crisis-timer').innerText = crisis.timer;
-        
-        if(crisis.timer <= 3) AudioEngine.playTone('warn');
-
-        if(crisis.timer <= 0) {
-          Game.failCrisis(id);
+        function hablar(texto, callback) {
+            if (!audioEnabled) {
+                if(callback) callback();
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.95;
+            if (callback) utterance.onend = callback;
+            window.speechSynthesis.speak(utterance);
         }
-      } 
-      // SI ESTÁ LIBRE, REVISAR SU CRONÓMETRO INDIVIDUAL
-      else {
-        if(State.timer <= State.nextSpawnTimes[id]) {
-          if(State.timer > 5) Game.createCrisisFor(id);
+
+        /* --- FLUJO TUTORIAL --- */
+        function startTutorial() {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-tutorial').classList.remove('hidden');
+            showStep();
         }
-      }
-    });
-  },
 
-  createCrisisFor: (targetId) => {
-    let type = ''; let icon = ''; let toolId = ''; let msg = '';
+        function showStep() {
+            const step = lecciones[currentStep];
+            document.getElementById('tuto-icon').innerText = step.icon;
+            document.getElementById('tuto-title').innerText = step.title;
+            document.getElementById('tuto-text').innerText = step.text;
+            hablar(step.text);
+        }
 
-    if(targetId === 'target-chat') {
-      type = 'spam'; icon = '📣'; toolId = 'tool-mega'; msg = "¡Ruido en chat!";
-    } else if (targetId === 'av-cap') {
-      type = 'sad'; icon = '👍'; toolId = 'tool-animo'; msg = "¡Te estresaste!";
-    } else {
-      if(Math.random() > 0.5) { type = 'rush'; icon = '📋'; toolId = 'tool-plano'; msg = "¡Salta turno!"; }
-      else { type = 'sad'; icon = '👍'; toolId = 'tool-animo'; msg = "¡Desanimado!"; }
-    }
+        document.getElementById('btn-tuto-next').onclick = function() {
+            currentStep++;
+            if (currentStep < lecciones.length) {
+                showStep();
+            } else {
+                startGame();
+            }
+        };
 
-    State.activeCrises[targetId] = { type, timer: 10 };
+        /* --- FLUJO JUEGO --- */
+        function startGame() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-arena').classList.remove('hidden');
+            hablar("¡Que comience el duelo! Mantén tu bienestar alto.");
+            nextGameTurn();
+        }
 
-    const container = UI.el("bub-" + targetId);
-    container.querySelector('.bubble-icon').innerText = icon;
-    container.querySelector('.crisis-timer').innerText = "10";
-    container.classList.add('active');
+        function playerMove(tipo) {
+            const chat = document.getElementById('game-chat');
+            chat.innerText = "¡Buena jugada! Pero el oponente intenta algo...";
+            setTimeout(triggerScenario, 1500);
+        }
 
-    UI.el(toolId).classList.add('glow');
-    UI.log(`⚠️ ${msg}`, 'bad');
-    AudioEngine.playTone('bad');
-  },
+        function triggerScenario() {
+            if (gameTurn >= escenarios.length) {
+                endGame(true);
+                return;
+            }
+            const esc = escenarios[gameTurn];
+            const modal = document.getElementById('modal-decision');
+            const optionsDiv = document.getElementById('modal-options');
+            
+            document.getElementById('modal-prompt').innerText = esc.q;
+            hablar(esc.audio);
+            
+            optionsDiv.innerHTML = '';
+            esc.opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-lg btn-primary";
+                btn.style.maxWidth = "100%";
+                btn.innerText = opt.t;
+                btn.onclick = () => resolveScenario(opt);
+                optionsDiv.appendChild(btn);
+            });
 
-  scheduleNextCrisis: (targetId) => {
-    // 2 a 6 segundos de descanso
-    const delay = 2 + Math.floor(Math.random() * 5); 
-    State.nextSpawnTimes[targetId] = State.timer - delay;
-  },
+            modal.classList.remove('hidden');
+        }
 
-  resolveCrisis: (targetId) => {
-    delete State.activeCrises[targetId];
-    UI.el("bub-" + targetId).classList.remove('active');
-    
-    if(Object.keys(State.activeCrises).length === 0) document.querySelectorAll('.tool').forEach(t => t.classList.remove('glow'));
+        function resolveScenario(opt) {
+            document.getElementById('modal-decision').classList.add('hidden');
+            const chat = document.getElementById('game-chat');
+            
+            if (opt.ok) {
+                bienestar = Math.min(100, bienestar + 5);
+                chat.innerText = "✅ " + opt.msg;
+            } else {
+                bienestar -= 25;
+                chat.innerText = "❌ " + opt.msg;
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 500);
+            }
+            
+            updateUI();
+            hablar(opt.msg, () => {
+                gameTurn++;
+                if (bienestar <= 0) endGame(false);
+                else if (gameTurn >= escenarios.length) endGame(true);
+            });
+        }
 
-    AudioEngine.playTone('good');
-    UI.log("✅ Solucionado.", "good");
-    Game.scheduleNextCrisis(targetId);
-  },
+        function updateUI() {
+            const fill = document.getElementById('wellbeing-fill');
+            const pctText = document.getElementById('wellness-pct');
+            fill.style.width = bienestar + "%";
+            pctText.innerText = bienestar + "%";
+            
+            if (bienestar < 40) fill.style.background = "var(--danger)";
+            else fill.style.background = "linear-gradient(90deg, var(--danger), var(--success))";
+        }
 
-  failCrisis: (targetId) => {
-    delete State.activeCrises[targetId];
-    UI.el("bub-" + targetId).classList.remove('active');
-    
-    State.lives--;
-    UI.updateLives();
-    UI.el('panel-team').classList.add('damage-shake');
-    setTimeout(()=>UI.el('panel-team').classList.remove('damage-shake'), 500);
-    
-    AudioEngine.playTone('bad');
-    UI.log("❌ ¡Fallo crítico! -1 Vida", "bad");
-    
-    if(State.lives <= 0) Game.over(false);
-    else {
-      Game.scheduleNextCrisis(targetId);
-    }
-  },
+        function nextGameTurn() {
+            // Lógica para avanzar si es necesario
+        }
 
-  buildPiece: () => {
-    if(State.buildStep > 6) return;
-    UI.el(`p${State.buildStep}`).classList.add('placed');
-    UI.el('progress-txt').innerText = `Piezas: ${State.buildStep}/6`;
-    UI.log(`🔧 Pieza ${State.buildStep} instalada.`, "good");
-    State.buildStep++;
-    if(State.buildStep > 6) UI.log("✨ ¡Nave lista!", "good");
-  },
+        function endGame(win) {
+            document.getElementById('screen-arena').classList.add('hidden');
+            const screen = document.getElementById('screen-result');
+            screen.classList.remove('hidden');
+            
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-msg');
+            const icon = document.getElementById('result-icon');
 
-  over: (win) => {
-    clearInterval(Game.loopInterval);
-    UI.el('screen-result').classList.remove('hidden');
-    const t = UI.el('res-title');
-    t.innerText = win ? "¡MISIÓN CUMPLIDA!" : "MISIÓN FALLIDA";
-    t.style.color = win ? "var(--ok)" : "var(--warn)";
-    let msg = (!win && State.lives <= 0) ? "El caos superó al equipo." : (!win) ? "El tiempo se agotó." : "¡Excelente gestión del caos!";
-    UI.el('res-msg').innerText = msg;
-    UI.el('res-stars').innerText = win ? (State.lives===3?"⭐⭐⭐":"⭐⭐") : "⭐";
-    if(win) document.querySelector('.ship-svg').classList.add('launch');
-  }
-};
-
-/* ========================================================
-   DRAG & DROP
-   ======================================================== */
-function drag(ev) { ev.dataTransfer.setData("tool", ev.target.id); }
-function allowDrop(ev) { ev.preventDefault(); }
-function handleDrop(ev) {
-  ev.preventDefault();
-  const toolId = ev.dataTransfer.getData("tool");
-  const targetEl = ev.target.closest('.avatar-card');
-  if(!targetEl) return;
-  const targetId = targetEl.id;
-
-  if(State.mode === 'TUTORIAL' && State.waitingAction) {
-    const step = TUTORIAL_STEPS[State.tutorialIdx];
-    if(toolId === step.handFrom && targetId === step.handTo) Tutorial.resolveAction();
-    else AudioEngine.playTone('bad');
-    return;
-  } 
-
-  if(State.mode === 'GAME') {
-    const crisis = State.activeCrises[targetId];
-    if(!crisis) return; 
-
-    let correct = false;
-    if(crisis.type === 'rush' && toolId === 'tool-plano') correct = true;
-    else if (crisis.type === 'sad' && toolId === 'tool-animo') correct = true;
-    else if (crisis.type === 'spam' && toolId === 'tool-mega') correct = true;
-
-    if(correct) Game.resolveCrisis(targetId);
-    else { UI.log("❌ Herramienta incorrecta", "bad"); AudioEngine.playTone('bad'); }
-  }
-}
-
-/* ========================================================
-   TUTORIAL
-   ======================================================== */
-const Tutorial = {
-  handInterval: null,
-  start: () => {
-    State.mode = 'TUTORIAL'; UI.el('screen-start').classList.add('hidden'); UI.el('tutorial-bar').classList.add('active'); UI.reset(); State.tutorialIdx = -1; Tutorial.nextStep();
-  },
-  nextStep: () => {
-    State.tutorialIdx++; const step = TUTORIAL_STEPS[State.tutorialIdx];
-    if(!step) { Tutorial.end(); return; }
-    const btn = UI.el('btn-next-step'); UI.el('tutorial-text').innerText = step.text; AudioEngine.speak(step.text);
-    if(step.spotlight) UI.spotlight(step.spotlight); else UI.unspotlight();
-    if(step.actionRequired) {
-      State.waitingAction = true; btn.disabled = true; btn.innerText = "Hazlo...";
-      if(step.handFrom) Tutorial.showHand(step.handFrom, step.handTo); if(step.setup) step.setup();
-    } else {
-      State.waitingAction = false; btn.disabled = false; btn.innerText = "Siguiente ▶"; Tutorial.hideHand(); if(step.setup) step.setup();
-    }
-  },
-  resolveAction: () => {
-    State.waitingAction = false; Tutorial.hideHand(); AudioEngine.playTone('good');
-    UI.el('btn-next-step').disabled = false; UI.el('btn-next-step').innerText = "¡Bien! Siguiente ▶";
-    document.querySelectorAll('.tool').forEach(t => t.classList.remove('glow'));
-    const b = UI.el('bub-av-rojo'); if(b) b.classList.remove('active');
-  },
-  showHand: (from, to) => {
-    const hand = UI.el('tutorial-hand'); hand.classList.add('active'); clearInterval(Tutorial.handInterval);
-    const move = () => {
-      const f = UI.el(from).getBoundingClientRect(); const t = UI.el(to).getBoundingClientRect();
-      hand.style.transition = 'none'; hand.style.top = (f.top+10)+'px'; hand.style.left = (f.left+10)+'px'; hand.classList.remove('hand-click');
-      requestAnimationFrame(() => { setTimeout(() => {
-          hand.style.transition = 'top 1.5s ease-in-out, left 1.5s ease-in-out';
-          hand.style.top = (t.top+20)+'px'; hand.style.left = (t.left+20)+'px'; hand.classList.add('hand-click');
-      }, 100);});
-    }; move(); Tutorial.handInterval = setInterval(move, 2200);
-  },
-  hideHand: () => { clearInterval(Tutorial.handInterval); UI.el('tutorial-hand').classList.remove('active'); },
-  end: () => { State.mode = 'MENU'; UI.el('tutorial-bar').classList.remove('active'); AudioEngine.speak("Listo."); setTimeout(Game.start, 1000); }
-};
-const TUTORIAL_STEPS = [
-  { text: "En esta misión, los problemas ocurren de forma individual y aleatoria.", spotlight: 'panel-team', actionRequired: false },
-  { text: "Rojo intenta saltarse el turno. Arreglalo.", spotlight: 'all', actionRequired: true, handFrom:'tool-plano', handTo:'av-rojo', setup:()=>{
-      const b = UI.el('bub-av-rojo'); b.querySelector('.bubble-icon').innerText="📋"; b.querySelector('.crisis-timer').innerText="--"; b.classList.add('active'); UI.el('tool-plano').classList.add('glow');
-  }},
-  { text: "Cuando arreglas un problema, ese personaje volverá a fallar entre 2 y 6 segundos después. ¡Mantente alerta!", spotlight: 'all', actionRequired: false }
-];
-</script>
+            if (win && bienestar > 0) {
+                title.innerText = "¡Victoria con Honor!";
+                icon.innerText = "🥋✨";
+                msg.innerText = "¡Eres un maestro del Juego Limpio! Hoy manejaste las burlas y el respeto con inteligencia social.";
+                hablar(msg.innerText + " ¡Recibes el Cinturón de Embajador!");
+            } else {
+                title.innerText = "Duelo Difícil";
+                icon.innerText = "🤕";
+                msg.innerText = "A veces los duelos son duros. Lo importante es aprender a proteger nuestro bienestar. ¡Inténtalo de nuevo!";
+                hablar(msg.innerText);
+            }
+        }
+    </script>
 </body>
 </html>
